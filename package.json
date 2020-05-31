@@ -1,6 +1,6 @@
 {
-  "name": "boost_testnet_v4",
-  "version": "1.0.0",
+  "name": "boost_testnet",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {

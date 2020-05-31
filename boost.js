@@ -3,6 +3,8 @@ const Wallet = require('ocore/wallet');
 const composer = require('ocore/composer');
 const network = require('ocore/network');
 const libKeys = require('biot-core/lib/keys');
+const eventBus = require('ocore/event_bus');
+
 
 (async () => {
   await bcore.init('test');
@@ -16,6 +18,16 @@ const libKeys = require('biot-core/lib/keys');
     throw Error('Run faucet first');
   }
 
+  let awaitStabilization = false;
+  let interval;
+  eventBus.on('my_transactions_became_stable', () => {
+    if (awaitStabilization) {
+      awaitStabilization = false;
+      interval = setInterval(boost, 6000);
+      boost();
+    }
+  });
+
   async function boost() {
     const unit = await new Promise((resolve, reject) => {
       let opts = {};
@@ -25,10 +37,18 @@ const libKeys = require('biot-core/lib/keys');
           address: addresses[0],
           amount: 0
         }];
-      opts.signer = Wallet.getSigner(opts, [myDeviceAddress], libKeys.signWithLocalPrivateKey, false);
+      opts.signer = Wallet.getSigner(opts,
+        [myDeviceAddress],
+        libKeys.signWithLocalPrivateKey,
+        false);
       opts.spend_unconfirmed = 'all';
       opts.callbacks = {
         ifError: (err) => {
+          if(err.includes('nonserials are not stable yet')){
+            clearInterval(interval);
+            awaitStabilization = true;
+            return resolve('I\'m waiting for unit stabilization and will try again');
+          }
           return reject(err);
         },
         ifNotEnoughFunds: (err) => {
@@ -45,6 +65,6 @@ const libKeys = require('biot-core/lib/keys');
     console.error(unit);
   }
 
+  interval = setInterval(boost, 6000);
   await boost();
-  setInterval(boost, 6000);
 })();

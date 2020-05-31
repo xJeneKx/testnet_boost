@@ -14,7 +14,6 @@ async function start() {
 
   eventBus.on('new_my_transactions', arrUnits => {
     console.error('new_my_transactions units: ', arrUnits);
-    console.error('Awaiting stable...');
   });
 
   eventBus.on('my_transactions_became_stable', arrUnits => {
@@ -28,7 +27,9 @@ async function start() {
       console.error('sent', addresses[0]);
       console.error('Awaiting response...');
     } else {
-      console.error('text', from_address, ' - ', text)
+      console.error('------------------------------');
+      console.error('now run boost.js');
+      process.exit(0);
     }
   });
 
